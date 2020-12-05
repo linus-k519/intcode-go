@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 type Instruction struct {
@@ -28,15 +30,23 @@ func (instruct *Instruction) Exec() {
 	}
 }
 
-func (instruct *Instruction) ScanArgs(index *int, program Program) {
+func (instruct *Instruction) ScanArgs(index *int, program *Program) {
 	numOfArgs := GetNumOfArgs(instruct.Opcode)
 
 	finishIndex := *index + numOfArgs
-	if len(program) <= finishIndex {
+	if len(program.Instructions) <= finishIndex {
 		panic(fmt.Sprintln("Invalid program format. Missing arguments for opcode", instruct.Opcode))
 	}
 
 	for ; *index < finishIndex; *index++ {
-		instruct.Args = append(instruct.Args, &program[program[*index]])
+		instruct.Args = append(instruct.Args, &program.Instructions[program.Instructions[*index]])
 	}
+}
+
+func (instruct *Instruction) String() string {
+	argsString := make([]string, len(instruct.Args))
+	for i, v := range instruct.Args {
+		argsString[i] = strconv.Itoa(*v)
+	}
+	return fmt.Sprintf("Op %d Args %s", instruct.Opcode, strings.Join(argsString, " "))
 }

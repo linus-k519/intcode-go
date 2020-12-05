@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -9,11 +8,7 @@ import (
 )
 
 func main() {
-	showExecTime := flag.Bool("time", false, "Show execution time")
-	flag.Parse()
-
-	timeStart := time.Now()
-
+	// Read file
 	args := os.Args[1:]
 	if len(args) <= 0 || args[0] == "" {
 		panic("Please specify a filename")
@@ -24,13 +19,18 @@ func main() {
 		panic(err)
 	}
 
+	// Clean newlines and comments
 	cleanedFile := clean(string(file))
 	program := ParseInstructions(cleanedFile)
 
+	// Execute program
+	startTime := time.Now()
 	program.Exec()
-	fmt.Println(program)
+	execTime := time.Since(startTime)
 
-	if *showExecTime {
-		fmt.Println(time.Since(timeStart))
-	}
+	fmt.Println("FINISHED in", execTime)
+	cpuInfo, totalOperations := program.CpuInfo()
+	fmt.Println(cpuInfo)
+	timePerOperation := fmt.Sprintf("%.3fµs", float64(execTime.Microseconds()) / float64(totalOperations))
+	fmt.Println("Time per operation", timePerOperation)
 }
