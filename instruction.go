@@ -6,22 +6,37 @@ import (
 
 type Instruction struct {
 	Opcode Operation
-	Args   [3]*int
+	Args   []*int
 }
 
-const (
-	IN1 = iota
-	IN2
-	OUT
-)
-
-func (i *Instruction) Exec() {
-	switch i.Opcode {
+func (instruct *Instruction) Exec() {
+	switch instruct.Opcode {
 	case OpAdd:
-		*i.Args[OUT] = *i.Args[IN1] + *i.Args[IN2]
+		*instruct.Args[2] = *instruct.Args[0] + *instruct.Args[1]
 	case OpMul:
-		*i.Args[OUT] = *i.Args[IN1] * *i.Args[IN2]
+		*instruct.Args[2] = *instruct.Args[0] * *instruct.Args[1]
+	case OpOut:
+		fmt.Println("Output:", *instruct.Args[0])
+	case OpIn:
+		fmt.Print("Input: ")
+		_, err := fmt.Scanf("%d", instruct.Args[0])
+		if err != nil {
+			panic(err)
+		}
 	default:
-		panic(fmt.Sprintln("Can not execute opcode", i.Opcode))
+		panic(fmt.Sprintln("Can not execute opcode", instruct.Opcode))
+	}
+}
+
+func (instruct *Instruction) ScanArgs(index *int, program Program) {
+	numOfArgs := GetNumOfArgs(instruct.Opcode)
+
+	finishIndex := *index + numOfArgs
+	if len(program) <= finishIndex {
+		panic(fmt.Sprintln("Invalid program format. Missing arguments for opcode", instruct.Opcode))
+	}
+
+	for ; *index < finishIndex; *index++ {
+		instruct.Args = append(instruct.Args, &program[program[*index]])
 	}
 }
