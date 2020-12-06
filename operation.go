@@ -1,5 +1,7 @@
 package main
 
+import "strconv"
+
 type Operation int
 
 const (
@@ -13,7 +15,7 @@ const (
 var OpName = map[Operation]string{
 	OpAdd: "ADD",
 	OpMul: "MUL",
-	OpIn: "IN",
+	OpIn:  "IN",
 	OpOut: "OUT",
 	OpEnd: "END",
 }
@@ -32,7 +34,7 @@ func GetNumOfArgs(o Operation) int {
 func (o Operation) String() string {
 	text, ok := OpName[o]
 	if !ok {
-		text = "UNKNOWN"
+		text = strconv.Itoa(int(o))
 	}
 	return text
 }

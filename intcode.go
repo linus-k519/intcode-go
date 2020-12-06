@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func main() {
+func compile() {
 	// Read file
 	args := os.Args[1:]
 	if len(args) <= 0 || args[0] == "" {
@@ -28,9 +28,16 @@ func main() {
 	program.Exec()
 	execTime := time.Since(startTime)
 
+	fmt.Println(program.StringInstructions())
+
 	fmt.Println("FINISHED in", execTime)
 	cpuInfo, totalOperations := program.CpuInfo()
 	fmt.Println(cpuInfo)
-	timePerOperation := fmt.Sprintf("%.3fµs", float64(execTime.Microseconds()) / float64(totalOperations))
-	fmt.Println("Time per operation", timePerOperation)
+	timePerOperation := fmt.Sprintf("%.3fns", float64(execTime.Nanoseconds()) / float64(totalOperations))
+	fmt.Println("Total operations:", totalOperations)
+	fmt.Println("Time per operation:", timePerOperation)
+}
+
+func main() {
+	compile()
 }

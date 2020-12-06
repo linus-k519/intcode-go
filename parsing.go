@@ -16,10 +16,10 @@ func clean(file string) string {
 
 func ParseInstructions(file string) *Program {
 	stringInstructions := strings.Split(file, ",")
-	intInstructions := make([]int, len(stringInstructions))
+	intInstructions := make([]int64, len(stringInstructions))
 	for i, instruction := range stringInstructions {
 		var err error
-		intInstructions[i], err = strconv.Atoi(instruction)
+		intInstructions[i], err = strconv.ParseInt(instruction, 10, 64)
 		if err != nil {
 			panic(err)
 		}

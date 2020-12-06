@@ -7,29 +7,27 @@ import (
 )
 
 type Program struct {
-	Instructions []int
-	Cpu          map[Operation]int
+	Instructions    []int64
+	InstructPointer int
+	Cpu             map[Operation]int
 }
 
 func (p *Program) Exec() {
-	for index := 0; index < len(p.Instructions); {
-		instruct := Instruction{}
-		instruct.Opcode = Operation(p.Instructions[index])
+	for p.InstructPointer = 0; p.InstructPointer < len(p.Instructions); {
+		instruct, instructPointerDelta := NewInstruction(p)
 		p.Cpu[instruct.Opcode]++
-		index++
 		if instruct.Opcode == OpEnd {
-			break
+			return
 		}
-
-		instruct.ScanArgs(&index, p)
 		instruct.Exec()
+		p.InstructPointer += instructPointerDelta
 	}
 }
 
 func (p *Program) StringInstructions() string {
 	stringProgram := make([]string, len(p.Instructions))
 	for i, v := range p.Instructions {
-		stringProgram[i] = strconv.Itoa(v)
+		stringProgram[i] = strconv.FormatInt(v, 10)
 	}
 	return strings.Join(stringProgram, ",")
 }
