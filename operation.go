@@ -1,28 +1,32 @@
 package main
 
-import "strconv"
+import (
+	"fmt"
+)
 
-type Operation int
+type Operation int8
 
 const (
-	OpAdd Operation = 1
-	OpMul Operation = 2
-	OpIn  Operation = 3
-	OpOut Operation = 4
-	OpEnd Operation = 99
+	OpAdd        Operation = 1
+	OpMul        Operation = 2
+	OpIn         Operation = 3
+	OpOut        Operation = 4
+	OpRelBaseOff Operation = 9
+	OpEnd        Operation = 99
 )
 
 var OpName = map[Operation]string{
-	OpAdd: "ADD",
-	OpMul: "MUL",
-	OpIn:  "IN",
-	OpOut: "OUT",
-	OpEnd: "END",
+	OpAdd:        "ADD",
+	OpMul:        "MUL",
+	OpIn:         "IN",
+	OpOut:        "OUT",
+	OpEnd:        "END",
+	OpRelBaseOff: "REL_BASE_OFF",
 }
 
-func GetNumOfArgs(o Operation) int {
+func (o Operation) numOfArgs() int {
 	switch o {
-	case OpIn, OpOut:
+	case OpIn, OpOut, OpRelBaseOff:
 		return 1
 	case OpAdd, OpMul:
 		return 3
@@ -34,7 +38,7 @@ func GetNumOfArgs(o Operation) int {
 func (o Operation) String() string {
 	text, ok := OpName[o]
 	if !ok {
-		text = strconv.Itoa(int(o))
+		text = fmt.Sprintf("OP_%02d", o)
 	}
 	return text
 }

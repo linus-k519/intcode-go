@@ -14,7 +14,7 @@ func clean(file string) string {
 	return file
 }
 
-func ParseInstructions(file string) *Program {
+func ParseProgram(file string) *Program {
 	stringInstructions := strings.Split(file, ",")
 	intInstructions := make([]int64, len(stringInstructions))
 	for i, instruction := range stringInstructions {
@@ -24,5 +24,5 @@ func ParseInstructions(file string) *Program {
 			panic(err)
 		}
 	}
-	return &Program{Instructions: intInstructions, Cpu: map[Operation]int{}}
+	return &Program{Instructs: intInstructions, Cpu: map[Operation]uint{}}
 }
