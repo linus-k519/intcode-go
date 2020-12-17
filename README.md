@@ -1,16 +1,14 @@
+# intcode
 
-
-# Usage
+## Usage
 
 ```bash
-intcode run program.ic
+intcode <cmd> <flags> <path>
 ```
 
+## Intcode Language Specifications
 
-
-# Intcode
-
-## Opcodes
+### Opcodes
 
 | Opcode | Params | Description                                                  |
 | ------ | ------ | ------------------------------------------------------------ |
@@ -26,7 +24,7 @@ intcode run program.ic
 | 99     | 0      | Ends the program                                             |
 > From https://esolangs.org/wiki/Intcode
 
-## Parameter Modes
+### Parameter Modes
 
 | Mode | Name           | Description                                                  |
 | ---- | -------------- | ------------------------------------------------------------ |
@@ -35,7 +33,6 @@ intcode run program.ic
 | 2    | Relative Mode  | The parameter is added to the relative base register, which results in the memory address of the value. |
 
 > From https://esolangs.org/wiki/Intcode
->
 
 ```bash
 ABCDE
@@ -49,9 +46,8 @@ DE - two-digit opcode,      02 == opcode 2
 ```
 
 > From https://adventofcode.com/2019/day/5
->
 
-## Examples
+### Examples
 
 ```bash
 1, 3, 4, 2, 99

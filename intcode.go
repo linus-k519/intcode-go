@@ -6,6 +6,7 @@ import (
 	log "github.com/linus-k519/llog"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -19,7 +20,7 @@ func run(file string) {
 	program.Exec()
 	execTime := time.Since(startTime)
 
-	if printExecutedProgram {
+	if outputFile != nil {
 		fmt.Fprintln(outputFile, program.StringInstructions())
 	}
 
@@ -33,8 +34,8 @@ func run(file string) {
 }
 
 var (
-	printExecutedProgram bool
-	outputFile           *os.File
+	outputFile *os.File
+	trace      bool
 )
 
 const version = "v5.1"
@@ -42,14 +43,19 @@ const version = "v5.1"
 func main() {
 	log.Config(0)
 
-	flag.BoolVar(&printExecutedProgram, "pep", false, "Print executed program")
-	outFile := flag.String("output", "", "File to print output to")
+	outputFilename := flag.String("output", "", "File to print the executed program to. Use 'stdout' to print to console")
+	flag.BoolVar(&trace, "trace", false, "Trace program execution via debug output")
 	flag.Parse()
-	if *outFile != "" {
-		var err error
-		outputFile, err = os.OpenFile(*outFile, os.O_CREATE|os.O_WRONLY, 0755)
-		if err != nil {
-			panic(err)
+	if outputFilename != nil && *outputFilename != "" {
+		if strings.ToLower(*outputFilename) == "stdout" {
+			outputFile = os.Stdout
+		} else {
+			var err error
+			outputFile, err = os.OpenFile(*outputFilename, os.O_CREATE|os.O_WRONLY, 0755)
+			if err != nil {
+				panic(err)
+			}
+			defer outputFile.Close()
 		}
 	}
 
@@ -72,8 +78,6 @@ func main() {
 	switch cmd {
 	case "run":
 		run(string(file))
-	case "beauty":
-		beautify(string(file))
 	default:
 		panic("Unknown command")
 	}

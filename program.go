@@ -15,13 +15,12 @@ type Program struct {
 
 func (p *Program) Exec() {
 	for p.InstructPointer = 0; p.InstructPointer < len(p.Instructs); {
-		instruct, instructPointerDelta := NewInstruction(p)
+		instruct := NewInstruction(p)
 		p.Cpu[instruct.Opcode]++
 		if instruct.Opcode == OpEnd {
 			return
 		}
 		instruct.Exec()
-		p.InstructPointer += instructPointerDelta
 	}
 }
 
