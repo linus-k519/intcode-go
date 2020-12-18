@@ -20,7 +20,7 @@ const (
 	OpJNZ Operation = 5
 	// OpJZ jumps to second arg, if first arg is zero.
 	OpJZ Operation = 6
-	// OpLT sets third arg to 1, if first arg is lower than second arg.
+	// OpLT sets third arg to 1, if first arg is less than second arg.
 	OpLT Operation = 7
 	// OpEq sets third arg to 1, if first arg is equal to second arg.
 	OpEq Operation = 8
@@ -32,15 +32,15 @@ const (
 
 var OpName = map[Operation]string{
 	OpAdd:     "ADD",
-	OpMul:     "MUL",
-	OpIn:      "IN",
-	OpOut:     "OUT",
-	OpJNZ:     "JNZ",
-	OpJZ:      "JZ",
-	OpLT:      "LT",
-	OpEq:      "EQ",
+	OpMul:     "MULTIPLY",
+	OpIn:      "INPUT",
+	OpOut:     "OUTPUT",
+	OpJNZ:     "JUMP NON-ZERO",
+	OpJZ:      "JUMP ZERO",
+	OpLT:      "LESS THAN",
+	OpEq:      "EQUAL",
 	OpEnd:     "END",
-	OpRelBase: "REL_BASE_OFF",
+	OpRelBase: "RELATIVE BASE OFFSET",
 }
 
 func (o Operation) numOfArgs() int {
@@ -56,10 +56,14 @@ func (o Operation) numOfArgs() int {
 	}
 }
 
-func (o Operation) String() string {
-	text, ok := OpName[o]
+func (o *Operation) String() string {
+	text, ok := OpName[*o]
 	if !ok {
 		text = fmt.Sprintf("OP_%02d", o)
 	}
 	return text
+}
+
+func (o *Operation) MarshalJSON() ([]byte, error) {
+	return []byte(o.String()), nil
 }

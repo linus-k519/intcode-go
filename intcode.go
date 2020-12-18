@@ -6,6 +6,7 @@ import (
 	log "github.com/linus-k519/llog"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -24,61 +25,77 @@ func run(file string) {
 		fmt.Fprintln(outputFile, program.StringInstructions())
 	}
 
-	fmt.Println("-- STATS --")
-	fmt.Println("Finished in", execTime)
-	cpuInfo, totalOperations := program.CpuInfo()
-	fmt.Println(cpuInfo)
-	timePerOperation := fmt.Sprintf("%.3fµs", float64(execTime.Nanoseconds())/float64(totalOperations))
-	fmt.Println("Total operations:", totalOperations)
-	fmt.Println("Time per operation:", timePerOperation)
+	if showStats {
+		var totalOperations uint = 0
+		for _, value := range program.OperationCount {
+			totalOperations += value
+		}
+		stats := Stats{
+			ExecDuration:    execTime,
+			TotalOperations: totalOperations,
+			Operations:      program.OperationCount,
+		}
+		fmt.Println(stats.String())
+	}
 }
 
 var (
-	outputFile *os.File
-	trace      bool
+	outputFile     *os.File
+	outputFilename string
+	trace          bool
+	showStats      bool
 )
 
-const version = "v5.1"
+const version = "v5.2"
 
 func main() {
 	log.Config(0)
+	flags()
 
-	outputFilename := flag.String("output", "", "File to print the executed program to. Use 'stdout' to print to console")
-	flag.BoolVar(&trace, "trace", false, "Trace program execution via debug output")
-	flag.Parse()
-	if outputFilename != nil && *outputFilename != "" {
-		if strings.ToLower(*outputFilename) == "stdout" {
-			outputFile = os.Stdout
-		} else {
-			var err error
-			outputFile, err = os.OpenFile(*outputFilename, os.O_CREATE|os.O_WRONLY, 0755)
-			if err != nil {
-				panic(err)
-			}
-			defer outputFile.Close()
-		}
-	}
+	outputFile = openOutputFile()
+	defer outputFile.Close()
 
-	cmd := flag.Arg(0)
-	if cmd == "" {
-		fmt.Println("INTCODE Computer", version)
-		fmt.Println("Use \"intcode -help\" for help")
+	programFilename := flag.Arg(0)
+	if programFilename == "" {
+		printInfo()
 		return
 	}
-
-	filename := flag.Arg(1)
-	if filename == "" {
-		panic("Please specify a filename")
-	}
-	file, err := ioutil.ReadFile(filename)
+	programFile, err := ioutil.ReadFile(programFilename)
 	if err != nil {
 		panic(err)
 	}
 
-	switch cmd {
-	case "run":
-		run(string(file))
-	default:
-		panic("Unknown command")
+	run(string(programFile))
+}
+
+func openOutputFile() *os.File {
+	if outputFilename == "" {
+		return nil
 	}
+
+	if strings.ToLower(outputFilename) == "stdout" {
+		return os.Stdout
+	}
+	outFile, err := os.OpenFile(outputFilename, os.O_CREATE|os.O_WRONLY, 0664)
+	if err != nil {
+		panic(err)
+	}
+	return outFile
+}
+
+func flags() {
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s <flags> <filename>\n\n", os.Args[0])
+		fmt.Fprintln(flag.CommandLine.Output(), "Flags:")
+		flag.PrintDefaults()
+	}
+	flag.StringVar(&outputFilename, "output", "", "File to print the executed program to. Use 'stdout' to print to console")
+	flag.BoolVar(&trace, "trace", false, "Trace program execution via debug output")
+	flag.BoolVar(&showStats, "stats", false, "Show showStats")
+	flag.Parse()
+}
+
+func printInfo() {
+	fmt.Printf("INTCODE Computer %s on %s %s/%s\n\n", version, runtime.Version(), runtime.GOARCH, runtime.GOOS)
+	fmt.Printf("Use \"%s -help\" for help\n", os.Args[0])
 }

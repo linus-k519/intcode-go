@@ -24,5 +24,5 @@ func ParseProgram(file string) *Program {
 			panic(err)
 		}
 	}
-	return &Program{Instructs: intInstructions, Cpu: map[Operation]uint{}}
+	return &Program{Instructs: intInstructions, OperationCount: map[Operation]uint{}}
 }

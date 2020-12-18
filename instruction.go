@@ -13,7 +13,7 @@ type Instruction struct {
 	Args    []*int64
 }
 
-func (instruct *Instruction) Exec() {
+func (instruct *Instruction) Exec() (end bool) {
 	switch instruct.Opcode {
 	case OpAdd:
 		*instruct.Args[2] = *instruct.Args[0] + *instruct.Args[1]
@@ -47,10 +47,13 @@ func (instruct *Instruction) Exec() {
 		}
 	case OpRelBase:
 		instruct.Program.RelBase += *instruct.Args[0]
+	case OpEnd:
+		end = true
 	default:
 		panic(fmt.Sprintf("@IP_%d: Unknown opcode: %s", instruct.Program.InstructPointer, instruct))
 	}
 	instruct.Program.InstructPointer += 1 + len(instruct.Args)
+	return end
 }
 
 func (instruct *Instruction) ScanArgs() int {
