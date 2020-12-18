@@ -2,25 +2,35 @@
 
 ## Usage
 
-```bash
-intcode <cmd> <flags> <path>
+```go
+intcode <flags> <path>
 ```
 
 ## Intcode Language Specifications
 
 ### Opcodes
 
+The Opcodes 01-09 and 99 are defined in [Advent of Code 2019](https://adventofcode.com/2019).
+
+*The Opcodes 11-15 and 80 are an extension by me.*
+
 | Opcode | Params | Description                                                  |
 | ------ | ------ | ------------------------------------------------------------ |
-| 01     | 3      | Adds the first two arguments and stores the result in the third argument. |
-| 02     | 3      | Multiplies the first two arguments and stores the result in the third argument. |
-| 03     | 1      | Inputs an integer and stores it in the first argument.       |
-| 04     | 1      | Outputs the first argument.                                  |
-| 05     | 2      | If the first argument is non-zero, sets the instruction pointer to the second argument. |
-| 06     | 2      | If the first argument is zero, sets the instruction pointer to the second argument. |
-| 07     | 3      | If the first argument is less than the second argument, sets the third argument to 1. If not less, sets it to 0. |
-| 08     | 3      | If the first argument is equal to the second argument, sets the third argument to 1. If not equal, sets it to 0. |
-| 09     | 1      | Adds the first argument to the relative base register.       |
+| 01     | 3      | first arg + second arg = third arg                           |
+| 02     | 3      | first arg * second arg = third arg                           |
+| 03     | 1      | Inputs an integer and stores it in the first arg.            |
+| 04     | 1      | Outputs the first arg.                                       |
+| 05     | 2      | If the first arg is non-zero, sets the instruction pointer to the second arg. |
+| 06     | 2      | If the first arg is zero, sets the instruction pointer to the second arg. |
+| 07     | 3      | If the first arg is less than the second argument, sets the third arg to 1. If not less, sets it to 0. |
+| 08     | 3      | If the first arg is equal to the second argument, sets the third arg to 1. If not equal, sets it to 0. |
+| 09     | 1      | Adds the first arg to the relative base register.            |
+| *11*   | *3*    | *Bitwise OR: first arg \| second arg = third arg.*           |
+| *12*   | *3*    | *Bitwise AND: first arg & second arg = third arg*            |
+| *13*   | *3*    | *Bitwise XOR: first arg ^ second arg = third arg*            |
+| *14*   | *3*    | *Integer Division: first arg / second arg = third arg*       |
+| *15*   | *3*    | *Modulo: first arg % second arg = third arg*                 |
+| *80*   | *4*    | *Syscall with args in order: eax, ebx, ecx, edx*             |
 | 99     | 0      | Ends the program                                             |
 > From https://esolangs.org/wiki/Intcode
 
@@ -52,4 +62,3 @@ DE - two-digit opcode,      02 == opcode 2
 ```bash
 1, 3, 4, 2, 99
 ```
-
