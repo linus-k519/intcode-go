@@ -23,7 +23,7 @@ func (p *Program) CpuInfo() (string, uint) {
 	var sum uint = 0
 	i := 0
 	for key, value := range p.OperationCount {
-		stringCpu[i] = fmt.Sprintf("%3dx %s", value, key)
+		stringCpu[i] = fmt.Sprintf("%3dx %s", value, key.String())
 		sum += value
 		i++
 	}
