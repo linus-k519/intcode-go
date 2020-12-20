@@ -10,8 +10,8 @@ func TestProgram_resetRegisters(t *testing.T) {
 		Ints:           nil,
 		IP:             42,
 		RelBase:        42,
-		Input:          nil,
-		Output:         nil,
+		InputReader:    nil,
+		OutputWriter:   nil,
 		Finish:         false,
 		OperationCount: nil,
 	}
@@ -47,12 +47,12 @@ func TestProgram_ExecInstruction(t *testing.T) {
 		Ints:           []int64{1, 2, 3, 0, 99},
 		IP:             0,
 		RelBase:        0,
-		Input:          nil,
-		Output:         nil,
+		InputReader:    nil,
+		OutputWriter:   nil,
 		Finish:         false,
 		OperationCount: nil,
 	}
-	p.ExecInstruction(OpAdd, []int{1, 2, 3})
+	p.ExecInstruction(opAdd, []int{1, 2, 3})
 	assert.Equal(t, int64(5), p.Ints[3])
 }
 
@@ -61,7 +61,7 @@ func TestProgram_NewArgIndexList(t *testing.T) {
 		Ints:    []int64{1, 0, 3, -38, 99},
 		RelBase: 42,
 	}
-	argIndexes := p.NewArgIndexList(1, []Mode{ModePos, ModeImm, ModeRel})
+	argIndexes := p.NewArgIndexList(1, []Mode{ModePosition, ModeImmediate, ModeRelativeBase})
 	assert.Equal(t, int64(1), p.Ints[argIndexes[0]])
 	assert.Equal(t, int64(3), p.Ints[argIndexes[1]])
 	assert.Equal(t, int64(99), p.Ints[argIndexes[2]])

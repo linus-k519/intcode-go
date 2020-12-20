@@ -9,26 +9,27 @@ import (
 type Opcode int8
 
 const (
-	// OpAdd adds to numbers.
-	OpAdd Opcode = 1
-	// OpMul multiplies two number.
-	OpMul Opcode = 2
-	// OpIn inputs a number.
-	OpIn Opcode = 3
-	// OpOut outputs a number.
-	OpOut Opcode = 4
-	// OpJNZ jump non-zero.
-	OpJNZ Opcode = 5
-	// OpJZ jump zero.
-	OpJZ Opcode = 6
-	// OpLT checks less than.
-	OpLT Opcode = 7
-	// OpEq checks equality.
-	OpEq Opcode = 8
-	// OpRelBase sets the relative base register.
-	OpRelBase Opcode = 9
-	// OpEnd ends the program.
-	OpEnd Opcode = 99
+	opAdd Opcode = iota + 1
+	opMultiply
+	opInput
+	opOutput
+	opJumpNonZero
+	opJumpZero
+	opLessThan
+	opEqual
+	opChangeRelativeBase
+	opBitAnd
+	opBitOr
+	opBitXor
+	opDivision
+	opModulo
+	opLeftShift
+	opRightShift
+	opNegate
+	opTimestamp
+	opRandom
+	opSyscall Opcode = 80
+	opEnd     Opcode = 99
 )
 
 // NewOpcode extracts an Opcode from an instruction value (Such as 01 from 12201).
@@ -36,33 +37,53 @@ func NewOpcode(val int64) Opcode {
 	return Opcode(val % 1e2)
 }
 
-// ArgNum returns the number of arguments of an Opcode.
-func (o Opcode) ArgNum() int {
-	switch o {
-	case OpIn, OpOut, OpRelBase:
-		return 1
-	case OpJNZ, OpJZ:
-		return 2
-	case OpAdd, OpMul, OpLT, OpEq:
-		return 3
-	default:
-		// OpEnd in particular
-		return 0
-	}
+var opcodeArgNum = map[Opcode]int{
+	opAdd:                3,
+	opMultiply:           3,
+	opInput:              1,
+	opOutput:             1,
+	opJumpNonZero:        2,
+	opJumpZero:           2,
+	opLessThan:           3,
+	opEqual:              3,
+	opEnd:                0,
+	opChangeRelativeBase: 1,
+	opBitAnd:             3,
+	opBitOr:              3,
+	opBitXor:             3,
+	opDivision:           3,
+	opModulo:             3,
+	opLeftShift:          3,
+	opRightShift:         3,
+	opNegate:             2,
+	opTimestamp:          1,
+	opRandom:             1,
+	opSyscall:            3,
 }
 
 // opName contains the names of the Opcode's.
 var opName = map[Opcode]string{
-	OpAdd:     "Add",
-	OpMul:     "Multiply",
-	OpIn:      "Input",
-	OpOut:     "Output",
-	OpJNZ:     "Jump non-zero",
-	OpJZ:      "Jump Zero",
-	OpLT:      "Less than",
-	OpEq:      "Equal",
-	OpEnd:     "End",
-	OpRelBase: "Relative Base Offset",
+	opAdd:                "Add",
+	opMultiply:           "Multiply",
+	opInput:              "InputReader",
+	opOutput:             "OutputWriter",
+	opJumpNonZero:        "Jump non-zero",
+	opJumpZero:           "Jump Zero",
+	opLessThan:           "Less than",
+	opEqual:              "Equal",
+	opEnd:                "End",
+	opChangeRelativeBase: "Relative Base Offset",
+	opBitAnd:             "Bitwise And",
+	opBitOr:              "Bitwise Or",
+	opBitXor:             "Bitwise Xor",
+	opDivision:           "Division",
+	opModulo:             "Modulo",
+	opLeftShift:          "Left shift",
+	opRightShift:         "Right shift",
+	opNegate:             "Negate",
+	opTimestamp:          "Timestamp",
+	opRandom:             "Random",
+	opSyscall:            "Syscall",
 }
 
 func (o Opcode) String() string {

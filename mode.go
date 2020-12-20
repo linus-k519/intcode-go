@@ -10,19 +10,19 @@ import (
 type Mode uint8
 
 const (
-	// ModePos position mode.
-	ModePos Mode = 0
-	// ModeImm immediate mode.
-	ModeImm Mode = 1
-	// ModeRel relative base mode.
-	ModeRel Mode = 2
+	// ModePosition position mode.
+	ModePosition Mode = 0
+	// ModeImmediate immediate mode.
+	ModeImmediate Mode = 1
+	// ModeRelativeBase relative base mode.
+	ModeRelativeBase Mode = 2
 )
 
 // modeName contains the names of Mode's.
 var modeName = map[Mode]string{
-	ModePos: "Position",
-	ModeImm: "Immediate",
-	ModeRel: "Relative Base",
+	ModePosition:     "Position",
+	ModeImmediate:    "Immediate",
+	ModeRelativeBase: "Relative Base",
 }
 
 // NewModeList creates a new mode list with num entries from val. Thus, the
