@@ -12,25 +12,31 @@ intcode <flags> <path>
 
 The Opcodes 01-09 and 99 are defined in [Advent of Code 2019](https://adventofcode.com/2019).
 
-*The Opcodes 11-15 and 80 are an extension by me.*
+The Opcodes 10-19 and 80 are an extension by me.
 
 | Opcode | Params | Description                                                  |
 | ------ | ------ | ------------------------------------------------------------ |
 | 01     | 3      | first arg + second arg = third arg                           |
 | 02     | 3      | first arg * second arg = third arg                           |
-| 03     | 1      | Inputs an integer and stores it in the first arg.            |
-| 04     | 1      | Outputs the first arg.                                       |
-| 05     | 2      | If the first arg is non-zero, sets the instruction pointer to the second arg. |
+| 03     | 1      | Inputs an integer and stores it in the first arg             |
+| 04     | 1      | Outputs the first arg                                        |
+| 05     | 2      | If the first arg is non-zero, sets the instruction pointer to the second arg |
 | 06     | 2      | If the first arg is zero, sets the instruction pointer to the second arg. |
-| 07     | 3      | If the first arg is less than the second argument, sets the third arg to 1. If not less, sets it to 0. |
-| 08     | 3      | If the first arg is equal to the second argument, sets the third arg to 1. If not equal, sets it to 0. |
-| 09     | 1      | Adds the first arg to the relative base register.            |
-| *11*   | *3*    | *Bitwise OR: first arg \| second arg = third arg.*           |
-| *12*   | *3*    | *Bitwise AND: first arg & second arg = third arg*            |
-| *13*   | *3*    | *Bitwise XOR: first arg ^ second arg = third arg*            |
-| *14*   | *3*    | *Integer Division: first arg / second arg = third arg*       |
-| *15*   | *3*    | *Modulo: first arg % second arg = third arg*                 |
-| *80*   | *4*    | *Syscall with args in order: eax, ebx, ecx, edx*             |
+| 07     | 3      | If the first arg is less than the second argument, sets the third arg to 1. If not less, sets it to 0 |
+| 08     | 3      | If the first arg is equal to the second argument, sets the third arg to 1. If not equal, sets it to 0 |
+| 09     | 1      | Adds the first arg to the relative base register             |
+| **—**  | **—**  | **Additional section below**                                 |
+| 10     | 3      | Bitwise AND: first arg \& second arg = third arg             |
+| 11     | 3      | Bitwise OR: first arg \| second arg = third arg              |
+| 12     | 3      | Bitwise XOR: first arg ^ second arg = third arg              |
+| 13     | 3      | Integer Division: first arg / second arg = third arg         |
+| 14     | 3      | Modulo: first arg % second arg = third arg                   |
+| 15     | 3      | Left shift: first arg << second arg = third arg              |
+| 16     | 3      | Right shift: first arg >> second arg = third arg             |
+| 17     | 3      | Negate: If first arg is 0, return 1. Otherwise return 0      |
+| 18     | 3      | Unix Timestamp: Sets the first arg to the current unix timestamp |
+| 19     | 3      | Random: Sets the first arg to a random positive number       |
+| *80*   | *3*    | **Future:** *Syscall: Perform a syscall with eax=first arg, ebx=second arg, ecx=third arg* |
 | 99     | 0      | Ends the program                                             |
 
 > From https://esolangs.org/wiki/Intcode
