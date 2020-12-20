@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"strconv"
 )
 
 // Opcode is a two-digit operation code, like 99(END) or 01(ADD). See const
@@ -53,22 +53,22 @@ func (o Opcode) ArgNum() int {
 
 // opName contains the names of the Opcode's.
 var opName = map[Opcode]string{
-	OpAdd:     "ADD",
-	OpMul:     "MULTIPLY",
-	OpIn:      "INPUT",
-	OpOut:     "OUTPUT",
-	OpJNZ:     "JUMP NON-ZERO",
-	OpJZ:      "JUMP ZERO",
-	OpLT:      "LESS THAN",
-	OpEq:      "EQUAL",
-	OpEnd:     "END",
-	OpRelBase: "RELATIVE BASE OFFSET",
+	OpAdd:     "Add",
+	OpMul:     "Multiply",
+	OpIn:      "Input",
+	OpOut:     "Output",
+	OpJNZ:     "Jump non-zero",
+	OpJZ:      "Jump Zero",
+	OpLT:      "Less than",
+	OpEq:      "Equal",
+	OpEnd:     "End",
+	OpRelBase: "Relative Base Offset",
 }
 
-func (o *Opcode) String() string {
-	text, ok := opName[*o]
+func (o Opcode) String() string {
+	text, ok := opName[o]
 	if !ok {
-		text = fmt.Sprintf("OP_%02d", o)
+		text = strconv.Itoa(int(o))
 	}
 	return text
 }

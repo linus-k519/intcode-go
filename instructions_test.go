@@ -69,3 +69,9 @@ func TestBoolToInt(t *testing.T) {
 	assert.Equal(t, int64(1), boolToInt(true))
 	assert.Equal(t, int64(0), boolToInt(false))
 }
+
+func TestIntToBool(t *testing.T) {
+	assert.Equal(t, true, intToBool(5))
+	assert.Equal(t, true, intToBool(-3))
+	assert.Equal(t, false, intToBool(0))
+}

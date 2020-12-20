@@ -5,20 +5,28 @@ import (
 	"math"
 )
 
+// Mode defines the mode of an argument, i.e. whether it points to a position or
+// is the value itself. See const declaration for concrete values.
 type Mode uint8
 
 const (
+	// ModePos position mode.
 	ModePos Mode = 0
+	// ModeImm immediate mode.
 	ModeImm Mode = 1
+	// ModeRel relative base mode.
 	ModeRel Mode = 2
 )
 
-var ModeName = map[Mode]string{
-	ModePos: "POS",
-	ModeImm: "IMM",
-	ModeRel: "REL",
+// modeName contains the names of Mode's.
+var modeName = map[Mode]string{
+	ModePos: "Position",
+	ModeImm: "Immediate",
+	ModeRel: "Relative Base",
 }
 
+// NewModeList creates a new mode list with num entries from val. Thus, the
+// right-most digit is the first and the left-most digit is the last.
 func NewModeList(val int64, num int) []Mode {
 	val /= 1e2
 	modes := make([]Mode, num)
@@ -30,7 +38,7 @@ func NewModeList(val int64, num int) []Mode {
 }
 
 func (m Mode) String() string {
-	text, ok := ModeName[m]
+	text, ok := modeName[m]
 	if !ok {
 		text = fmt.Sprintf("MODE_%d", m)
 	}
