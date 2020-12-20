@@ -22,6 +22,7 @@ intcode <cmd> <flags> <path>
 | 08     | 3      | If the first argument is equal to the second argument, sets the third argument to 1. If not equal, sets it to 0. |
 | 09     | 1      | Adds the first argument to the relative base register.       |
 | 99     | 0      | Ends the program                                             |
+
 > From https://esolangs.org/wiki/Intcode
 
 ### Parameter Modes

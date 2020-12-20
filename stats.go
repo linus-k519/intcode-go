@@ -8,9 +8,9 @@ import (
 )
 
 type Stats struct {
-	ExecDuration    time.Duration      `json:"exec_duration"`
-	TotalOperations uint               `json:"total_operations"`
-	Operations      map[Operation]uint `json:"operations"`
+	ExecDuration    time.Duration   `json:"exec_duration"`
+	TotalOperations uint            `json:"total_operations"`
+	Operations      map[Opcode]uint `json:"operations"`
 }
 
 func (s *Stats) String() string {

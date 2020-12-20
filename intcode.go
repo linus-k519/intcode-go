@@ -13,8 +13,7 @@ import (
 
 func run(file string) {
 	// Clean newlines and comments
-	cleanedFile := clean(file)
-	program := ParseProgram(cleanedFile)
+	program := NewProgram(file)
 
 	// Execute program
 	startTime := time.Now()
@@ -22,7 +21,7 @@ func run(file string) {
 	execTime := time.Since(startTime)
 
 	if outputFile != nil {
-		fmt.Fprintln(outputFile, program.StringInstructions())
+		fmt.Fprintln(outputFile, program.StringInts())
 	}
 
 	if showStats {
