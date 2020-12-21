@@ -39,7 +39,7 @@ The Opcodes 10-19 and 80 are an extension by me.
 | *80*   | *3*    | **Future:** *Syscall: Perform a syscall with eax=first arg, ebx=second arg, ecx=third arg* |
 | 99     | 0      | Ends the program                                             |
 
-> From https://esolangs.org/wiki/Intcode
+> From [esolangs.org/wiki/Intcode](https://esolangs.org/wiki/Intcode)
 
 ### Parameter Modes
 
@@ -49,7 +49,7 @@ The Opcodes 10-19 and 80 are an extension by me.
 | 1    | Immediate Mode | The parameter is the value itself (Not used for writing).    |
 | 2    | Relative Mode  | The parameter is added to the relative base register, which results in the memory address of the value. |
 
-> From https://esolangs.org/wiki/Intcode
+> From [esolangs.org/wiki/Intcode](https://esolangs.org/wiki/Intcode)
 
 ```bash
 ABCDE
@@ -62,7 +62,7 @@ DE - two-digit opcode,      02 == opcode 2
                                   omitted due to being a leading zero
 ```
 
-> From https://adventofcode.com/2019/day/5
+> From [adventofcode.com/2019/day/5](https://adventofcode.com/2019/day/5)
 
 ### Examples
 
