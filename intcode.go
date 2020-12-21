@@ -45,7 +45,7 @@ var (
 	showStats      bool
 )
 
-const version = "v9.1"
+const version = "v9.2"
 
 func main() {
 	log.Config(0)
