@@ -13,7 +13,7 @@ import (
 
 func run(file string) {
 	// Clean newlines and comments
-	program := NewProgram(file)
+	program := NewProgram(file, additionalMemory)
 
 	// Execute program
 	startTime := time.Now()
@@ -25,24 +25,16 @@ func run(file string) {
 	}
 
 	if showStats {
-		var totalOperations uint = 0
-		for _, value := range program.OperationCount {
-			totalOperations += value
-		}
-		stats := Stats{
-			ExecDuration:    execTime,
-			TotalOperations: totalOperations,
-			Operations:      program.OperationCount,
-		}
-		fmt.Println(stats.String())
+		fmt.Println(NewStats(program.OperationCount, execTime).String())
 	}
 }
 
 var (
-	outputFile     *os.File
-	outputFilename string
-	trace          bool
-	showStats      bool
+	outputFile       *os.File
+	outputFilename   string
+	trace            bool
+	showStats        bool
+	additionalMemory uint
 )
 
 const version = "v9.2"
@@ -91,6 +83,8 @@ func flags() {
 	flag.StringVar(&outputFilename, "output", "", "File to print the executed program to. Use 'stdout' to print to console")
 	flag.BoolVar(&trace, "trace", false, "Trace program execution via debug output")
 	flag.BoolVar(&showStats, "stats", false, "Show showStats")
+	flag.UintVar(&additionalMemory, "mem", 42, "Number of ints that are allocated for the memory in addition "+
+		"to the program. If a memory address outside the allocated memory is requested, the memory is increased by that offset")
 	flag.Parse()
 }
 

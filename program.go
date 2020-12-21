@@ -29,8 +29,6 @@ type Program struct {
 	Finish bool
 	// OperationCount contains the number of executions of each Opcode.
 	OperationCount map[Opcode]uint
-
-	Memory map[int]int64
 }
 
 // Exec executes a program.
@@ -103,10 +101,10 @@ func (p *Program) NewArgIndexList(startIndex int, modes []Mode) []int {
 // NewProgram parses a new program of the provided string. Comment lines starting
 // with an '#' will be ignored, spaces will be converted into commas and multiple
 // commas and newlines will be ignored.
-func NewProgram(str string) *Program {
+func NewProgram(str string, additionalMemory uint) *Program {
 	str = clean(str)
 	intsStr := strings.Split(str, ",")
-	ints := make([]int64, len(intsStr))
+	ints := make([]int64, len(intsStr)+int(additionalMemory))
 	for i, v := range intsStr {
 		var err error
 		ints[i], err = strconv.ParseInt(v, 10, 64)
@@ -148,14 +146,27 @@ func (p *Program) StringInts() string {
 	return strings.Join(ints, ",")
 }
 
+// increaseMemory increases the memory of Program.Ints by delta.
+func (p *Program) increaseMemory(delta uint) {
+	// Reserve a little bit more memory right away, because the reservation is very
+	// slow and future requests could access later addresses
+	delta += uint(float64(len(p.Ints))*0.05) + 1
+
+	percentage := (float64(delta) / float64(len(p.Ints))) * 100
+	log.Info(fmt.Sprintf("Increasing memory by %d ints (%.4f%%)", delta, percentage))
+
+	// Request new array of delta, copy the elements and assign it to program
+	intsMem := make([]int64, delta+uint(len(p.Ints)))
+	copy(intsMem, p.Ints)
+	p.Ints = intsMem
+}
+
 func (p *Program) GetArgPointers(argIndexes []int) []*int64 {
 	argPointers := make([]*int64, len(argIndexes))
 	for i := 0; i < len(argIndexes); i++ {
 		if argIndexes[i] >= len(p.Ints) {
-			log.Info("Detected memory access at", argIndexes[i], "limit", len(p.Ints))
-			intsMem := make([]int64, argIndexes[i]+1)
-			copy(intsMem, p.Ints)
-			p.Ints = intsMem
+			// Memory address is out of range -> allocate more memory
+			p.increaseMemory(uint(argIndexes[i] + 1 - len(p.Ints)))
 		}
 		argPointers[i] = &p.Ints[argIndexes[i]]
 	}
