@@ -1,14 +1,16 @@
-FROM golang:1.15 AS build
+# Builing intcode computer
+FROM golang:1.15-alpine AS build
 WORKDIR /go/src/app
 COPY . .
 RUN go get -d -v ./...
 RUN go install -v ./...
 
-FROM python:3.8 as final
+# Building node server
+FROM node:10-alpine as final
 WORKDIR /usr/src/app
-COPY --from=build /go/src/app/intcode .
+COPY --from=build /go/bin/intcode .
 COPY server .
-RUN pip install -r requirements.txt
+RUN npm install
 
 EXPOSE 5000
-CMD ["python3.8", "server.py"]
+CMD ["node", "server.js"]

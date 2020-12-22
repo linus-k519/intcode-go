@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="de">
+<body>
+
+<h1>WebSocket Test</h1>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+    socket.emit('executeProgram', {program: "11101,3,5,0,4,3,99"})
+    socket.on('message', data => {document.body.innerHTML += data});
+</script>
+
+</body>
+</html>
