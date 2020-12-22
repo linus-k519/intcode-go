@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"strings"
 	"time"
-	"unsafe"
 )
 
 func run(file string) {
@@ -26,6 +25,7 @@ func run(file string) {
 	}
 
 	if showStats {
+		fmt.Println("Stats:")
 		fmt.Println(NewStats(program.OperationCount, execTime).String())
 	}
 }
@@ -56,8 +56,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Println("Memory", unsafe.Sizeof([100]OpcodeInfo{}))
 
 	run(string(programFile))
 }
