@@ -6,7 +6,7 @@ import (
 
 // Opcode is a two-digit operation code, like 99(END) or 01(ADD). See const
 // declaration for concrete values.
-type Opcode int8
+type Opcode uint8
 
 // NewOpcode extracts an Opcode from an instruction value (Such as 01 from 12201).
 func NewOpcode(val int64) Opcode {
@@ -19,7 +19,7 @@ type OpcodeInfo struct {
 	Fn     func(p *Program, args []*int64)
 }
 
-var Opcodes = map[Opcode]OpcodeInfo{
+var Opcodes = [...]OpcodeInfo{
 	1: {
 		Name:   "Add",
 		ArgNum: 3,
@@ -133,12 +133,9 @@ var Opcodes = map[Opcode]OpcodeInfo{
 }
 
 func (o Opcode) String() string {
-	opInfo, ok := Opcodes[o]
-	var text string
-	if ok {
-		text = opInfo.Name
+	if int(o) < len(Opcodes) {
+		return Opcodes[o].Name
 	} else {
-		text = strconv.Itoa(int(o))
+		return "OP_" + strconv.Itoa(int(o))
 	}
-	return text
 }

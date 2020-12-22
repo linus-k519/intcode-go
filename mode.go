@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"math"
+	"strconv"
 )
 
 // Mode defines the mode of an argument, i.e. whether it points to a Position or
@@ -54,11 +54,9 @@ func NewModeList(val int64, num int) []Mode {
 }
 
 func (m Mode) String() string {
-	text := ""
 	if int(m) < len(Modes) {
-		text = Modes[m].Name
+		return Modes[m].Name
 	} else {
-		text = fmt.Sprintf("MODE_%d", m)
+		return "Mode_" + strconv.Itoa(int(m))
 	}
-	return text
 }

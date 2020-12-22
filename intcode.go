@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"unsafe"
 )
 
 func run(file string) {
@@ -55,6 +56,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Println("Memory", unsafe.Sizeof([100]OpcodeInfo{}))
 
 	run(string(programFile))
 }

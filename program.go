@@ -52,10 +52,10 @@ func (p *Program) ExecInstruction(opcode Opcode, argIndexes []int) {
 	argNum := len(argIndexes)
 	oldIP := p.IP
 
-	opInfo, ok := Opcodes[opcode]
-	if !ok {
+	if int(opcode) >= len(Opcodes) {
 		panic(fmt.Sprint("Unknown opcode ", opcode))
 	}
+	opInfo := Opcodes[opcode]
 	args := p.GetArgPointers(argIndexes)
 
 	opInfo.Fn(p, args)

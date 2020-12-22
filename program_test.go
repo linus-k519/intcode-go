@@ -15,7 +15,7 @@ func TestProgram_clean(t *testing.T) {
 }
 
 func TestNewProgram(t *testing.T) {
-	p := NewProgram("1 \n,\n,#Hallo\n 2 \n 3,, 5")
+	p := NewProgram("1 \n,\n,#Hallo\n 2 \n 3,, 5", 0)
 	assert.Equal(t, []int64{1, 2, 3, 5}, p.Ints)
 	assert.Equal(t, 0, p.IP)
 	assert.Equal(t, int64(0), p.RelBase)
