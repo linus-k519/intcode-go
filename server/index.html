@@ -4,11 +4,27 @@
 
 <h1>WebSocket Test</h1>
 
+<label for="program">Program:</label>
+<br>
+<textarea id="program">
+
+</textarea>
+
+<pre id="output">
+
+</pre>
+
 <script src="/socket.io/socket.io.js"></script>
 <script>
     const socket = io();
     socket.emit('executeProgram', {program: "11101,3,5,0,4,3,99"})
-    socket.on('message', data => {document.body.innerHTML += data});
+    socket.on('message', data => {textToHtml(data)});
+    socket.on('stdout', data => {textToHtml(data)});
+    socket.on('stderr', data => {textToHtml(data)});
+
+    function textToHtml(text) {
+        document.getElementById('output').append(text)
+    }
 </script>
 
 </body>
