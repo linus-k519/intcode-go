@@ -3,48 +3,27 @@ package main
 import (
 	"flag"
 	"fmt"
-	log "github.com/linus-k519/llog"
+	log "github.com/linus-k519/logo"
 	"io/ioutil"
 	"os"
 	"runtime"
-	"strings"
-	"time"
 )
 
-func run(file string) {
-	// Clean newlines and comments
-	program := NewProgram(file, additionalMemory)
-
-	// Execute program
-	startTime := time.Now()
-	program.Exec()
-	execTime := time.Since(startTime)
-
-	if outputFile != nil {
-		fmt.Fprintln(outputFile, program.StringInts())
-	}
-
-	if showStats {
-		fmt.Println("Stats:")
-		fmt.Println(NewStats(program.OperationCount, execTime).String())
-	}
-}
+const version = "v9.2"
 
 var (
-	outputFile       *os.File
 	outputFilename   string
+	outputFile       *os.File
 	trace            bool
 	showStats        bool
 	additionalMemory uint
 )
 
-const version = "v9.2"
-
 func main() {
 	log.Config(0)
 	flags()
 
-	outputFile = openOutputFile()
+	outputFile = openOutputFile(outputFilename)
 	defer outputFile.Close()
 
 	programFilename := flag.Arg(0)
@@ -57,22 +36,39 @@ func main() {
 		panic(err)
 	}
 
-	run(string(programFile))
+	runProgram(string(programFile))
 }
 
-func openOutputFile() *os.File {
-	if outputFilename == "" {
-		return nil
+func runProgram(str string) {
+	// Create a new program and execute it
+	p := NewWithAdditionalMemory(str, additionalMemory)
+	// TODO set p.Trace
+	p.Exec()
+
+	// Print executed program
+	if outputFile != nil {
+		fmt.Fprintln(outputFile, p.Ints.String())
 	}
 
-	if strings.ToLower(outputFilename) == "stdout" {
+	// Show stats
+	if showStats {
+		fmt.Println("Stats:")
+		fmt.Println(p.Stats.String())
+	}
+}
+
+func openOutputFile(filename string) *os.File {
+	if filename == "" {
+		return nil
+	}
+	if filename == "-" {
 		return os.Stdout
 	}
-	outFile, err := os.OpenFile(outputFilename, os.O_CREATE|os.O_WRONLY, 0664)
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0664)
 	if err != nil {
 		panic(err)
 	}
-	return outFile
+	return file
 }
 
 func flags() {
@@ -81,7 +77,7 @@ func flags() {
 		fmt.Fprintln(flag.CommandLine.Output(), "Flags:")
 		flag.PrintDefaults()
 	}
-	flag.StringVar(&outputFilename, "output", "", "File to print the executed program to. Use 'stdout' to print to console")
+	flag.StringVar(&outputFilename, "output", "", "File to print the executed program to. Use '-' to print to console")
 	flag.BoolVar(&trace, "trace", false, "Trace program execution via debug output")
 	flag.BoolVar(&showStats, "stats", false, "Show showStats")
 	flag.UintVar(&additionalMemory, "mem", 42, "Number of ints that are allocated for the memory in addition "+

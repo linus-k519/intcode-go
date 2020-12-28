@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	log "github.com/linus-k519/llog"
+	log "github.com/linus-k519/logo"
 	"io"
 	"os"
 	"regexp"
@@ -15,7 +15,7 @@ import (
 type Program struct {
 	// Ints is the actual program, i.e. an array of the instructions with the
 	// corresponding arguments.
-	Ints []int64
+	Ints ints
 	// IP is the instruction pointer. It is the index in the Ints array of the
 	// instruction that is currently being executed.
 	IP int
@@ -23,39 +23,41 @@ type Program struct {
 	RelBase int64
 	// InputReader is the io.Reader, from which the input for the program is read.
 	InputReader io.Reader
+	// InputWriter is the io.Writer where input prompts are written to.
+	InputWriter io.Writer
 	// OutputWriter is the io.Writer, in which output of the program is written.
 	OutputWriter io.Writer
 	// Finish indicates whether the program has finished running.
 	Finish bool
-	// OperationCount contains the number of executions of each Opcode.
-	OperationCount map[Opcode]uint
+
+	Stats *stats
 }
 
 // Exec executes a program.
 func (p *Program) Exec() {
 	for p.IP = 0; p.IP < len(p.Ints); {
 		// Parse current instruct
-		opcode := NewOpcode(p.Ints[p.IP])
-		modes := NewModeList(p.Ints[p.IP], Opcodes[opcode].ArgNum)
-		argIndexes := p.NewArgIndexList(p.IP+1, modes)
+		op := NewOpcode(p.Ints[p.IP])
+		modes := NewModeList(p.Ints[p.IP], opcodes[op].ArgNum)
+		argIndexes := p.newArgIndexList(p.IP+1, modes)
 
-		p.ExecInstruction(opcode, argIndexes)
-		p.OperationCount[opcode]++
+		p.execInstruction(op, argIndexes)
+		//p.OperationCount[op]++
 		if p.Finish {
 			return
 		}
 	}
 }
 
-// ExecInstruction executes an Instruction
-func (p *Program) ExecInstruction(opcode Opcode, argIndexes []int) {
+// execInstruction executes an Instruction
+func (p *Program) execInstruction(opcode opcode, argIndexes []int) {
 	argNum := len(argIndexes)
 	oldIP := p.IP
 
-	if int(opcode) >= len(Opcodes) {
+	if int(opcode) >= len(opcodes) {
 		panic(fmt.Sprint("Unknown opcode ", opcode))
 	}
-	opInfo := Opcodes[opcode]
+	opInfo := opcodes[opcode]
 	args := p.GetArgPointers(argIndexes)
 
 	opInfo.Fn(p, args)
@@ -69,18 +71,10 @@ func (p *Program) ExecInstruction(opcode Opcode, argIndexes []int) {
 	}
 }
 
-func printArgs(opcode Opcode, args []*int64) {
-	argsStr := make([]string, len(args))
-	for i, v := range args {
-		argsStr[i] = strconv.FormatInt(*v, 10)
-	}
-	log.Debug("Instruction:", opcode, "["+strings.Join(argsStr, " ")+"]")
-}
-
-// NewArgIndexList returns a list of indexes of the arguments starting by
+// newArgIndexList returns a list of indexes of the arguments starting by
 // startIndex in Ints. They are evaluated according to the specific Mode.
 // The number of len(modes) arguments will be returned.
-func (p *Program) NewArgIndexList(startIndex int, modes []Mode) []int {
+func (p *Program) newArgIndexList(startIndex int, modes []Mode) []int {
 	argNum := len(modes)
 	endIndex := startIndex + argNum - 1
 	if endIndex >= len(p.Ints) {
@@ -98,25 +92,35 @@ func (p *Program) NewArgIndexList(startIndex int, modes []Mode) []int {
 	return argIndexes
 }
 
-// NewProgram parses a new program of the provided string. Comment lines starting
+// New parses a new program of the provided string. Comment lines starting
 // with an '#' will be ignored, spaces will be converted into commas and multiple
 // commas and newlines will be ignored.
-func NewProgram(str string, additionalMemory uint) *Program {
-	str = clean(str)
-	intsStr := strings.Split(str, ",")
-	ints := make([]int64, len(intsStr)+int(additionalMemory))
+func New(program string, additionalMemory uint) *Program {
+	return NewWithAdditionalMemory(program, additionalMemory)
+}
+
+// NewWithAdditionalMemory parses a new program of the provided string. For
+// running the program additionalMemory many int64s are allocated in addition to
+// the program memory. Comment lines starting with an '#' will be ignored, spaces
+// will be converted into commas and multiple commas and newlines will be
+// ignored.
+func NewWithAdditionalMemory(program string, additionalMemory uint) *Program {
+	program = clean(program)
+	intsStr := strings.Split(program, ",")
+	_ints := make([]int64, len(intsStr)+int(additionalMemory))
 	for i, v := range intsStr {
 		var err error
-		ints[i], err = strconv.ParseInt(v, 10, 64)
+		_ints[i], err = strconv.ParseInt(v, 10, 64)
 		if err != nil {
 			panic(err)
 		}
 	}
 	return &Program{
-		Ints:           ints,
-		InputReader:    os.Stdin,
-		OutputWriter:   os.Stdout,
-		OperationCount: map[Opcode]uint{},
+		Ints:         _ints,
+		InputReader:  os.Stdin,
+		InputWriter:  os.Stderr,
+		OutputWriter: os.Stdout,
+		Stats:        newStats(),
 	}
 }
 
@@ -128,22 +132,15 @@ func clean(str string) string {
 	str = commentRegex.ReplaceAllString(str, "")
 
 	// Convert spaces and newlines into commas
+	str = strings.ReplaceAll(str, "\n", ",")
 	str = strings.ReplaceAll(str, " ", ",")
-	str = strings.ReplaceAll(str, "\n", "")
+	beginProgramRegex := regexp.MustCompile("^,")
+	str = beginProgramRegex.ReplaceAllString(str, "")
 
 	// Remove multiple commas
 	multipleCommas := regexp.MustCompile("[,]+")
 	str = multipleCommas.ReplaceAllString(str, ",")
 	return str
-}
-
-// StringInts converts Ints to a comma-separated string.
-func (p *Program) StringInts() string {
-	ints := make([]string, len(p.Ints))
-	for i, v := range p.Ints {
-		ints[i] = strconv.FormatInt(v, 10)
-	}
-	return strings.Join(ints, ",")
 }
 
 // increaseMemory increases the memory of Program.Ints by delta.

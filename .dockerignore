@@ -1,0 +1,6 @@
+.github
+examples/
+*_test.go
+*.md
+*.log
+Dockerfile

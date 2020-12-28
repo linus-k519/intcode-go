@@ -2,61 +2,60 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
 )
 
-type Stats struct {
-	ExecDuration     time.Duration   `json:"exec_duration"`
-	TotalOperations  uint            `json:"total_operations"`
-	TimePerOperation time.Duration   `json:"time_per_operation"`
-	Operations       map[Opcode]uint `json:"operations"`
+type stats struct {
+	ExecDuration     time.Duration   `json:"exec_duration,omitempty"`
+	TotalOperations  uint            `json:"total_operations,omitempty"`
+	TimePerOperation time.Duration   `json:"time_per_operation,omitempty"`
+	Operations       map[opcode]uint `json:"operations,omitempty"`
 }
 
-func (s *Stats) String() string {
-	text, _ := json.MarshalIndent(s, "", "  ")
-	return string(text)
+func (s *stats) String() string {
+	textByte, _ := json.MarshalIndent(s, "", "")
+	text := string(textByte)
+	text = strings.ReplaceAll(text, "{\n", "")
+	text = strings.ReplaceAll(text, "\n}", "")
+	text = strings.ReplaceAll(text, "\"", "")
+	text = strings.ReplaceAll(text, ",", "")
+	return text
 }
 
-func NewStats(operationCount map[Opcode]uint, duration time.Duration) *Stats {
-	s := Stats{
-		ExecDuration: duration,
-		Operations:   operationCount,
+func newStats() *stats {
+	return &stats{
+		Operations: map[opcode]uint{},
 	}
-	for _, value := range operationCount {
+}
+
+func (s *stats) calculate() {
+	// Count operations
+	for _, value := range s.Operations {
 		s.TotalOperations += value
 	}
+
+	// Calculate time per operations
 	nanosPerOp := float64(s.ExecDuration.Nanoseconds()) / float64(s.TotalOperations)
 	s.TimePerOperation, _ = time.ParseDuration(strconv.FormatFloat(nanosPerOp, 'f', -1, 64) + "ns")
-	return &s
 }
 
-func (p *Program) CpuInfo() (string, uint) {
-	stringCpu := make([]string, len(p.OperationCount))
-	var sum uint = 0
-	i := 0
-	for key, value := range p.OperationCount {
-		stringCpu[i] = fmt.Sprintf("%3dx %s", value, key.String())
-		sum += value
-		i++
-	}
-	return strings.Join(stringCpu, "\n"), sum
-}
+func (s *stats) MarshalJSON() ([]byte, error) {
+	s.calculate()
 
-func (s *Stats) MarshalJSON() ([]byte, error) {
+	// Convert operations to string
 	operationsString := map[string]uint{}
 	for key, value := range s.Operations {
 		operationsString[key.String()] = value
 	}
 
-	type Alias Stats
+	type Alias stats
 	return json.Marshal(&struct {
 		ExecDuration     string `json:"exec_duration"`
 		TimePerOperation string `json:"time_per_operation"`
 		*Alias
-		Operations map[string]uint `json:"operations"`
+		Operations map[string]uint `json:"operations,omitempty"`
 	}{
 		ExecDuration:     s.ExecDuration.String(),
 		TimePerOperation: s.TimePerOperation.String(),

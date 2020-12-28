@@ -1,14 +1,22 @@
 <!DOCTYPE html>
 <html lang="de">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <title>Intcode</title>
+</head>
 <body>
 
 <h1>WebSocket Test</h1>
 
 <label for="program">Program:</label>
 <br>
-<textarea id="program">
+<textarea id="program"></textarea>
+<button id="execute_program">Execute</button>
+<br>
+<label for="stdin">Stdin</label>
+<br>
+<input id="stdin" type="text">
 
-</textarea>
 
 <pre id="output">
 
@@ -17,10 +25,28 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
     const socket = io();
-    socket.emit('executeProgram', {program: "11101,3,5,0,4,3,99"})
-    socket.on('message', data => {textToHtml(data)});
-    socket.on('stdout', data => {textToHtml(data)});
-    socket.on('stderr', data => {textToHtml(data)});
+    const stdinInput = document.getElementById("stdin")
+    stdinInput.addEventListener('keyup', ({key}) => {
+        if (key === "Enter") {
+            socket.emit('stdin', stdinInput.value + '\n')
+            stdinInput.value = ''
+        }
+    })
+    const program = document.getElementById("program")
+    const executeButton = document.getElementById("execute_program")
+    executeButton.addEventListener('click', () => socket.emit('executeProgram', {
+        program: program.value,
+        flags: ['-stats']
+    }))
+    socket.on('message', data => {
+        textToHtml(data)
+    });
+    socket.on('stdout', data => {
+        textToHtml(data)
+    });
+    socket.on('stderr', data => {
+        textToHtml(data)
+    });
 
     function textToHtml(text) {
         document.getElementById('output').append(text)

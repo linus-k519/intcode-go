@@ -4,22 +4,22 @@ import (
 	"strconv"
 )
 
-// Opcode is a two-digit operation code, like 99(END) or 01(ADD). See const
+// opcode is a two-digit operation code, like 99(END) or 01(ADD). See const
 // declaration for concrete values.
-type Opcode uint8
+type opcode uint8
 
-// NewOpcode extracts an Opcode from an instruction value (Such as 01 from 12201).
-func NewOpcode(val int64) Opcode {
-	return Opcode(val % 1e2)
+// NewOpcode extracts an opcode from an instruction value (Such as 01 from 12201).
+func NewOpcode(val int64) opcode {
+	return opcode(val % 1e2)
 }
 
-type OpcodeInfo struct {
+type opcodeInfo struct {
 	Name   string
 	ArgNum int
 	Fn     func(p *Program, args []*int64)
 }
 
-var Opcodes = [...]OpcodeInfo{
+var opcodes = [...]opcodeInfo{
 	1: {
 		Name:   "Add",
 		ArgNum: 3,
@@ -132,9 +132,9 @@ var Opcodes = [...]OpcodeInfo{
 	},
 }
 
-func (o Opcode) String() string {
-	if int(o) < len(Opcodes) {
-		return Opcodes[o].Name
+func (o opcode) String() string {
+	if int(o) < len(opcodes) {
+		return opcodes[o].Name
 	} else {
 		return "OP_" + strconv.Itoa(int(o))
 	}

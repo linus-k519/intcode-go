@@ -17,14 +17,14 @@ func Multiply(_ *Program, args []*int64) {
 	*args[2] = *args[0] * *args[1]
 }
 
-// Input performs an input. It prints an input message on w and then reads an input from r and returns it.
+// Input performs an input. It prints an input message on Program.InputWriter and
+// then reads an input from Program.InputReader.
 func Input(p *Program, args []*int64) {
-	_, err := fmt.Fprint(p.OutputWriter, "Input: ")
-	if err != nil {
-		panic(err)
+	if p.InputWriter != nil {
+		fmt.Fprint(p.InputWriter, "Input: ")
 	}
 
-	_, err = fmt.Fscanf(p.InputReader, "%d", args[0])
+	_, err := fmt.Fscanf(p.InputReader, "%d", args[0])
 	if err != nil {
 		panic(err)
 	}
