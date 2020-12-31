@@ -3,135 +3,143 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"syscall"
+	"os"
 	"time"
 )
 
-// Add performs an addition (a + b).
-func Add(_ *Program, args []*int64) {
-	*args[2] = *args[0] + *args[1]
+// Add sets arg[2] to arg[0] + arg[1]
+func Add(p *Program, argIndexes []int) {
+	p.Set(argIndexes[2], p.Get(argIndexes[0])+p.Get(argIndexes[1]))
 }
 
-// Multiply performs a multiplication (a * b).
-func Multiply(_ *Program, args []*int64) {
-	*args[2] = *args[0] * *args[1]
+// Multiply sets arg[2] to arg[0] * arg[1]
+func Multiply(p *Program, argIndexes []int) {
+	p.Set(argIndexes[2], p.Get(argIndexes[0])*p.Get(argIndexes[1]))
 }
 
-// Input performs an input. It prints an input message on Program.InputWriter and
-// then reads an input from Program.InputReader.
-func Input(p *Program, args []*int64) {
-	if p.InputWriter != nil {
-		fmt.Fprint(p.InputWriter, "Input: ")
+// Input prints an input message on Program.DebugWriter and then reads an input
+// from Program.InputReader to arg[0].
+func Input(p *Program, argIndexes []int) {
+	// Show input prompt
+	if p.InputReader == os.Stdin {
+		fmt.Fprint(p.DebugWriter, "Input: ")
 	}
 
-	_, err := fmt.Fscanf(p.InputReader, "%d", args[0])
+	// Read input value
+	var value int64
+	_, err := fmt.Fscanf(p.InputReader, "%d", &value)
 	if err != nil {
 		panic(err)
 	}
+	p.Set(argIndexes[0], value)
 }
 
-// Output performs an output. It prints val to w.
-func Output(p *Program, args []*int64) {
-	fmt.Fprintln(p.OutputWriter, "Output:", *args[0])
+// Output prints arg[0] to Program.OutputWriter.
+func Output(p *Program, argIndexes []int) {
+	fmt.Fprintln(p.OutputWriter, p.Get(argIndexes[0]))
 }
 
-// JumpNonZero performs a jump non-zero. It returns jumpPos if val is non-zero and oldPos otherwise.
-func JumpNonZero(p *Program, args []*int64) {
-	if *args[0] != 0 {
-		p.IP = int(*args[1])
+// JumpNonZero sets Program.IP to arg[1], if arg[0] is non-zero.
+func JumpNonZero(p *Program, argIndexes []int) {
+	if p.Get(argIndexes[0]) != 0 {
+		p.IP = int(p.Get(argIndexes[1]))
+		p.MoveIP = false
 	}
 }
 
-// JumpZero performs a jump zero. It returns jumpPos if val is zero and oldPos otherwise.
-func JumpZero(p *Program, args []*int64) {
-	if *args[0] == 0 {
-		p.IP = int(*args[1])
+// JumpZero sets Program.IP to arg[1], if arg[0] is zero.
+func JumpZero(p *Program, argIndexes []int) {
+	if p.Get(argIndexes[0]) == 0 {
+		p.IP = int(p.Get(argIndexes[1]))
+		p.MoveIP = false
 	}
 }
 
-// LessThan performs a less than. It returns 1 if a < b and 0 if not.
-func LessThan(_ *Program, args []*int64) {
-	*args[2] = boolToInt(*args[0] < *args[1])
+// LessThan sets arg[2] to 1, if arg[0] < arg[1]. Otherwise sets arg[2] to 0.
+func LessThan(p *Program, argIndexes []int) {
+	val := boolToInt(p.Get(argIndexes[0]) < p.Get(argIndexes[1]))
+	p.Set(argIndexes[2], val)
 }
 
-// Equal performs an equal. It returns 1 if a == b and 0 if not.
-func Equal(_ *Program, args []*int64) {
-	*args[2] = boolToInt(*args[0] == *args[1])
+// Equal sets arg[2] to 1, if arg[0] == arg[1]. Otherwise sets arg[2] to 0.
+func Equal(p *Program, argIndexes []int) {
+	val := boolToInt(p.Get(argIndexes[0]) == p.Get(argIndexes[1]))
+	p.Set(argIndexes[2], val)
 }
 
-// ChangeRelativeBase performs a relative base change. It adds v to relBase and returns the new relBase.
-func ChangeRelativeBase(p *Program, args []*int64) {
-	p.RelBase += *args[0]
+// AddRelativeBase adds arg[0] to Program.RelBase.
+func AddRelativeBase(p *Program, argIndexes []int) {
+	p.RelBase += p.Get(argIndexes[0])
 }
 
 // -- Additional section --
 
 // BitAnd performs a bitwise and (a & b).
-func BitAnd(_ *Program, args []*int64) {
-	*args[2] = *args[0] & *args[1]
+func BitAnd(p *Program, argIndexes []int) {
+	p.Ints[argIndexes[2]] = p.Ints[argIndexes[0]] & p.Ints[argIndexes[1]]
 }
 
 // BitOr performs a bitwise or (a | b).
-func BitOr(_ *Program, args []*int64) {
-	*args[2] = *args[0] | *args[1]
+func BitOr(p *Program, argIndexes []int) {
+	p.Ints[argIndexes[2]] = p.Ints[argIndexes[0]] | p.Ints[argIndexes[1]]
 }
 
 // BitXor performs a bitwise xor (a ^ b).
-func BitXor(_ *Program, args []*int64) {
-	*args[2] = *args[0] ^ *args[1]
+func BitXor(p *Program, argIndexes []int) {
+	p.Ints[argIndexes[2]] = p.Ints[argIndexes[0]] ^ p.Ints[argIndexes[1]]
 }
 
 // Division performs a integer division (a / b).
-func Division(_ *Program, args []*int64) {
-	*args[2] = *args[0] / *args[1]
+func Division(p *Program, argIndexes []int) {
+	p.Ints[argIndexes[2]] = p.Ints[argIndexes[0]] / p.Ints[argIndexes[1]]
 }
 
 // Modulo performs modulo (a % b).
-func Modulo(_ *Program, args []*int64) {
-	*args[2] = *args[0] % *args[1]
+func Modulo(p *Program, argIndexes []int) {
+	p.Ints[argIndexes[2]] = p.Ints[argIndexes[0]] % p.Ints[argIndexes[1]]
 }
 
 // LeftShift performs a left shift (a << b).
-func LeftShift(_ *Program, args []*int64) {
-	*args[2] = *args[0] << *args[1]
+func LeftShift(p *Program, argIndexes []int) {
+	p.Ints[argIndexes[2]] = p.Ints[argIndexes[0]] << p.Ints[argIndexes[1]]
 }
 
 // RightShift performs a right shift (a >> b).
-func RightShift(_ *Program, args []*int64) {
-	*args[2] = *args[0] >> *args[1]
+func RightShift(p *Program, argIndexes []int) {
+	p.Ints[argIndexes[2]] = p.Ints[argIndexes[0]] >> p.Ints[argIndexes[1]]
 }
 
 // Negate negates the value. Returns 1 if v == 0, and returns 0 otherwise.
-func Negate(_ *Program, args []*int64) {
-	*args[1] = boolToInt(!intToBool(*args[0]))
+func Negate(p *Program, argIndexes []int) {
+	p.Ints[argIndexes[1]] = boolToInt(!intToBool(p.Ints[argIndexes[0]]))
 }
 
 // Timestamp returns the current unix timestamp.
-func Timestamp(_ *Program, args []*int64) {
-	*args[0] = time.Now().Unix()
+func Timestamp(p *Program, argIndexes []int) {
+	p.Ints[argIndexes[0]] = time.Now().Unix()
 }
 
 // Random return a random positive number.
-func Random(_ *Program, args []*int64) {
-	*args[0] = rand.Int63()
+func Random(p *Program, argIndexes []int) {
+	p.Ints[argIndexes[0]] = rand.Int63()
 }
 
-// Absolute calculates the positive value of args[0] and saves it into args[1]
-func Absolute(_ *Program, args []*int64) {
-	if *args[0] < 0 {
-		*args[1] = -*args[0]
+// Absolute calculates the positive value of argIndexes[0] and saves it into argIndexes[1]
+func Absolute(p *Program, argIndexes []int) {
+	if p.Ints[argIndexes[0]] < 0 {
+		p.Ints[argIndexes[1]] = -p.Ints[argIndexes[0]]
 	} else {
-		*args[1] = *args[0]
+		p.Ints[argIndexes[1]] = p.Ints[argIndexes[0]]
 	}
 }
 
 // Syscall performs a syscall.
-func Syscall(_ *Program, args []*int64) {
-	syscall.RawSyscall(uintptr(*args[0]), uintptr(*args[1]), uintptr(*args[1]), 0)
+func Syscall(_ *Program, _ []int) {
+	//syscall.RawSyscall(uintptr(*argIndexes[0]), uintptr(*argIndexes[1]), uintptr(*argIndexes[1]), 0)
 }
 
 // End sets Program.Finish to true to end the program.
-func End(p *Program, _ []*int64) {
+func End(p *Program, _ []int) {
 	p.Finish = true
 }
 

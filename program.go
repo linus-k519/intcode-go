@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	log "github.com/linus-k519/logo"
 	"io"
 	"os"
 	"regexp"
@@ -19,56 +18,77 @@ type Program struct {
 	// IP is the instruction pointer. It is the index in the Ints array of the
 	// instruction that is currently being executed.
 	IP int
+	// MoveIP indicates whether IP should be moved after executing the instruction.
+	MoveIP bool
 	// RelBase is the value of the relative base register.
 	RelBase int64
 	// InputReader is the io.Reader, from which the input for the program is read.
 	InputReader io.Reader
-	// InputWriter is the io.Writer where input prompts are written to.
-	InputWriter io.Writer
+	// DebugWriter is the io.Writer where input prompts are written to.
+	DebugWriter io.Writer
 	// OutputWriter is the io.Writer, in which output of the program is written.
 	OutputWriter io.Writer
 	// Finish indicates whether the program has finished running.
 	Finish bool
-
-	Stats *stats
+	// Stats contains detailed information about the program execution.
+	Stats stats
+	// Debug indicates whether debug outputs should be shown.
+	Debug bool
 }
 
 // Exec executes a program.
 func (p *Program) Exec() {
+	p.Stats.start()
 	for p.IP = 0; p.IP < len(p.Ints); {
-		// Parse current instruct
-		op := NewOpcode(p.Ints[p.IP])
+		p.MoveIP = true
+		// Parse current instruction
+		op := newOpcode(p.Ints[p.IP])
 		modes := NewModeList(p.Ints[p.IP], opcodes[op].ArgNum)
 		argIndexes := p.newArgIndexList(p.IP+1, modes)
-
+		// Execute instruction
 		p.execInstruction(op, argIndexes)
-		//p.OperationCount[op]++
 		if p.Finish {
-			return
+			break
 		}
+	}
+	p.Stats.stop()
+}
+
+// execInstruction executes an instruction.
+func (p *Program) execInstruction(op opcode, argIndexes []int) {
+	// Get function of opcode and execute it
+	opInfo := opcodes[op]
+	if opInfo.Fn == nil {
+		fmt.Fprintln(p.DebugWriter, "Unknown opcode", op.String())
+	}
+	opInfo.Fn(p, argIndexes)
+	if p.Debug {
+		p.debugInstruction(op, argIndexes)
+	}
+	if p.Stats.Activated {
+		// Increment operations count
+		p.Stats.Operations[op]++
+	}
+	if p.MoveIP {
+		// Move instruction pointer by one for the opcode plus the number of arguments
+		p.IP += 1 + len(argIndexes)
 	}
 }
 
-// execInstruction executes an Instruction
-func (p *Program) execInstruction(opcode opcode, argIndexes []int) {
-	argNum := len(argIndexes)
-	oldIP := p.IP
+func (p *Program) debugInstruction(op opcode, argIndexes []int) {
+	// Print instruction pointer
+	fmt.Fprintf(p.DebugWriter, "IP %3d: ", p.IP)
 
-	if int(opcode) >= len(opcodes) {
-		panic(fmt.Sprint("Unknown opcode ", opcode))
+	// Print opcode and args
+	args := make(ints, len(argIndexes))
+	for i, index := range argIndexes {
+		args[i] = p.Ints[index]
 	}
-	opInfo := opcodes[opcode]
-	args := p.GetArgPointers(argIndexes)
+	fmt.Fprintf(p.DebugWriter, "%-60s", op.String()+" args ["+args.String()+"]")
 
-	opInfo.Fn(p, args)
-	//printArgs(opcode, args)
-
-	if p.IP == oldIP {
-		// If the instruction pointer has not been changed by an
-		// instruction-pointer-move-function, move it by one (for the opcode) plus number
-		// of args
-		p.IP += 1 + argNum
-	}
+	// Print raw integers
+	raw := p.Ints[p.IP : p.IP+opcodes[op].ArgNum+1]
+	fmt.Fprintln(p.DebugWriter, " (Raw: "+raw.String()+")")
 }
 
 // newArgIndexList returns a list of indexes of the arguments starting by
@@ -92,35 +112,28 @@ func (p *Program) newArgIndexList(startIndex int, modes []Mode) []int {
 	return argIndexes
 }
 
-// New parses a new program of the provided string. Comment lines starting
-// with an '#' will be ignored, spaces will be converted into commas and multiple
-// commas and newlines will be ignored.
-func New(program string, additionalMemory uint) *Program {
-	return NewWithAdditionalMemory(program, additionalMemory)
-}
+// New parses a new program of the provided string. For running the program
+// additionalMemory many int64s are allocated in addition to the program memory.
+// Comment lines starting with an '#' will be ignored, spaces will be converted
+// into commas and multiple commas and newlines will be ignored.
+func New(intsStr string, additionalMemory uint) *Program {
+	intsStr = clean(intsStr)
+	intsStrArr := strings.Split(intsStr, ",")
 
-// NewWithAdditionalMemory parses a new program of the provided string. For
-// running the program additionalMemory many int64s are allocated in addition to
-// the program memory. Comment lines starting with an '#' will be ignored, spaces
-// will be converted into commas and multiple commas and newlines will be
-// ignored.
-func NewWithAdditionalMemory(program string, additionalMemory uint) *Program {
-	program = clean(program)
-	intsStr := strings.Split(program, ",")
-	_ints := make([]int64, len(intsStr)+int(additionalMemory))
-	for i, v := range intsStr {
+	// Parse each value to a number
+	intsArr := make(ints, len(intsStrArr)+int(additionalMemory))
+	for i, v := range intsStrArr {
 		var err error
-		_ints[i], err = strconv.ParseInt(v, 10, 64)
+		intsArr[i], err = strconv.ParseInt(v, 10, 64)
 		if err != nil {
 			panic(err)
 		}
 	}
 	return &Program{
-		Ints:         _ints,
+		Ints:         intsArr,
 		InputReader:  os.Stdin,
-		InputWriter:  os.Stderr,
+		DebugWriter:  os.Stderr,
 		OutputWriter: os.Stdout,
-		Stats:        newStats(),
 	}
 }
 
@@ -134,6 +147,8 @@ func clean(str string) string {
 	// Convert spaces and newlines into commas
 	str = strings.ReplaceAll(str, "\n", ",")
 	str = strings.ReplaceAll(str, " ", ",")
+
+	// Remove possible first empty value (due to a comment at the beginning of the program)
 	beginProgramRegex := regexp.MustCompile("^,")
 	str = beginProgramRegex.ReplaceAllString(str, "")
 
@@ -143,29 +158,39 @@ func clean(str string) string {
 	return str
 }
 
-// increaseMemory increases the memory of Program.Ints by delta.
-func (p *Program) increaseMemory(delta uint) {
-	// Reserve a little bit more memory right away, because the reservation is very
-	// slow and future requests could access later addresses
-	delta += uint(float64(len(p.Ints))*0.05) + 1
-
-	percentage := (float64(delta) / float64(len(p.Ints))) * 100
-	log.Info(fmt.Sprintf("Increasing memory by %d ints (%.4f%%)", delta, percentage))
-
-	// Request new array of delta, copy the elements and assign it to program
-	intsMem := make([]int64, delta+uint(len(p.Ints)))
-	copy(intsMem, p.Ints)
-	p.Ints = intsMem
+func (p *Program) Get(index int) int64 {
+	p.increaseMemoryIfNecessary(index)
+	if p.Stats.Activated {
+		p.Stats.MemoryAccesses["Get"]++
+	}
+	return p.Ints[index]
 }
 
-func (p *Program) GetArgPointers(argIndexes []int) []*int64 {
-	argPointers := make([]*int64, len(argIndexes))
-	for i := 0; i < len(argIndexes); i++ {
-		if argIndexes[i] >= len(p.Ints) {
-			// Memory address is out of range -> allocate more memory
-			p.increaseMemory(uint(argIndexes[i] + 1 - len(p.Ints)))
-		}
-		argPointers[i] = &p.Ints[argIndexes[i]]
+func (p *Program) Set(index int, value int64) {
+	p.increaseMemoryIfNecessary(index)
+	if p.Stats.Activated {
+		p.Stats.MemoryAccesses["Set"]++
 	}
-	return argPointers
+	p.Ints[index] = value
+}
+
+func (p *Program) increaseMemoryIfNecessary(index int) {
+	if index >= len(p.Ints) {
+		// Memory address is out of range -> allocate more memory
+		p.increaseMemory(index + 1 - len(p.Ints))
+	}
+}
+
+// increaseMemory increases the memory of Program.Ints by delta.
+func (p *Program) increaseMemory(newSize int) {
+	difference := newSize - len(p.Ints)
+	percentage := (float64(difference) / float64(len(p.Ints))) * 100
+	if p.Debug {
+		fmt.Fprintf(p.DebugWriter, "Increasing memory by %d ints (%.4f%%)\n", difference, percentage)
+	}
+
+	// Request new array of newSize, copy the elements and assign it to program
+	intsLarge := make(ints, newSize+len(p.Ints))
+	copy(intsLarge, p.Ints)
+	p.Ints = intsLarge
 }

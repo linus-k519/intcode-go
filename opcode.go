@@ -8,15 +8,15 @@ import (
 // declaration for concrete values.
 type opcode uint8
 
-// NewOpcode extracts an opcode from an instruction value (Such as 01 from 12201).
-func NewOpcode(val int64) opcode {
+// newOpcode extracts an opcode from an instruction value (Such as 01 from 12201).
+func newOpcode(val int64) opcode {
 	return opcode(val % 1e2)
 }
 
 type opcodeInfo struct {
 	Name   string
 	ArgNum int
-	Fn     func(p *Program, args []*int64)
+	Fn     func(p *Program, argIndexes []int)
 }
 
 var opcodes = [...]opcodeInfo{
@@ -61,9 +61,9 @@ var opcodes = [...]opcodeInfo{
 		Fn:     Equal,
 	},
 	9: {
-		Name:   "Change relative base",
+		Name:   "Add relative base",
 		ArgNum: 1,
-		Fn:     ChangeRelativeBase,
+		Fn:     AddRelativeBase,
 	},
 	10: {
 		Name:   "Bitwise And",
@@ -133,9 +133,9 @@ var opcodes = [...]opcodeInfo{
 }
 
 func (o opcode) String() string {
+	name := "(" + strconv.Itoa(int(o)) + ")"
 	if int(o) < len(opcodes) {
-		return opcodes[o].Name
-	} else {
-		return "OP_" + strconv.Itoa(int(o))
+		name = opcodes[o].Name + name
 	}
+	return name
 }
