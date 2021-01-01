@@ -46,26 +46,33 @@ func TestProgram_NewArgIndexList(t *testing.T) {
 	assert.Equal(t, int64(99), p.Ints[argIndexes[2]])
 }
 
-func BenchmarkProgram_Copy(b *testing.B) {
-	old := []int64{1, 2, 3}
-	for i := 0; i < b.N; i++ {
-		intsLarge := make([]int64, len(old)+420)
-		copy(intsLarge, old)
-		old = intsLarge
+const (
+	increaseDelta     = 100
+	increaseThreshold = 1 << 13
+)
 
-		if len(old) > 4096*2 {
-			old = []int64{1, 2, 3}
+func BenchmarkProgram_increaseMemoryCopy(b *testing.B) {
+	arr := []int64{1, 2, 3}
+	for i := 0; i < b.N; i++ {
+		// Create new array and copy the elements
+		newArr := make([]int64, len(arr)+increaseDelta)
+		copy(newArr, arr)
+		arr = newArr
+
+		if len(arr) > increaseThreshold {
+			arr = []int64{1, 2, 3}
 		}
 	}
 }
 
-func BenchmarkProgram_Extend(b *testing.B) {
-	old := []int64{1, 2, 3}
+func BenchmarkProgram_increaseMemoryExtend(b *testing.B) {
+	arr := []int64{1, 2, 3}
 	for i := 0; i < b.N; i++ {
-		old = append(old, make([]int64, len(old)+420)...)
+		// Create new slice and append to the old
+		arr = append(arr, make([]int64, len(arr)+increaseDelta)...)
 
-		if len(old) > 4096*2 {
-			old = []int64{1, 2, 3}
+		if len(arr) > increaseThreshold {
+			arr = []int64{1, 2, 3}
 		}
 	}
 }

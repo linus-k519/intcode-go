@@ -32,7 +32,7 @@ type Program struct {
 	Finish bool
 	// Stats contains detailed information about the program execution.
 	Stats stats
-	// Debug indicates whether debug outputs should be shown.
+	// Debug indicates whether showDebug outputs should be shown.
 	Debug bool
 }
 
@@ -184,13 +184,17 @@ func (p *Program) increaseMemoryIfNecessary(index int) {
 // increaseMemory increases the memory of Program.Ints by delta.
 func (p *Program) increaseMemory(newSize int) {
 	difference := newSize - len(p.Ints)
+	if difference <= 0 {
+		return
+	}
+
 	percentage := (float64(difference) / float64(len(p.Ints))) * 100
 	if p.Debug {
 		fmt.Fprintf(p.DebugWriter, "Increasing memory by %d ints (%.4f%%)\n", difference, percentage)
 	}
 
-	// Request new array of newSize, copy the elements and assign it to program
-	intsLarge := make(ints, newSize+len(p.Ints))
+	// Make new array of newSize, copy the elements and assign it to program
+	intsLarge := make(ints, newSize)
 	copy(intsLarge, p.Ints)
 	p.Ints = intsLarge
 }
